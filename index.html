@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#f0f0f0;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid #1e1e1e}
+.logo{font-size:16px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:#836EF9}
+.connect-btn{background:#836EF9;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;transition:background 0.2s}
+.connect-btn:hover{background:#6B54F0}
+.connected-pill{background:#1a1a2e;color:#836EF9;border:1px solid #836EF9;padding:6px 14px;border-radius:20px;font-size:13px;font-family:monospace}
+.main{padding:2rem;max-width:1000px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:2rem}
+.stat{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:1rem}
+.stat-label{font-size:12px;color:#666;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:600;color:#f0f0f0}
+.section{margin-bottom:2rem}
+.section-title{font-size:13px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem}
+.list-form{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:1.5rem}
+.form-row{margin-bottom:1rem}
+.form-row label{display:block;font-size:13px;color:#888;margin-bottom:6px}
+.form-row input,.form-row textarea{width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;color:#f0f0f0;font-size:14px;font-family:inherit;outline:none;transition:border 0.2s}
+.form-row input:focus,.form-row textarea:focus{border-color:#836EF9}
+.form-row textarea{height:70px;resize:none}
+.submit-btn{background:#836EF9;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;transition:background 0.2s}
+.submit-btn:hover{background:#6B54F0}
+.submit-btn:disabled{background:#333;color:#666;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.agent-card{background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:1.25rem;transition:border 0.2s}
+.agent-card:hover{border-color:#2a2a2a}
+.agent-name{font-size:15px;font-weight:500;color:#f0f0f0;margin-bottom:4px}
+.agent-desc{font-size:13px;color:#666;line-height:1.5;margin-bottom:1rem}
+.agent-footer{display:flex;align-items:center;justify-content:space-between}
+.price-tag{font-size:14px;font-weight:600;color:#836EF9}
+.buy-btn{background:transparent;color:#836EF9;border:1px solid #836EF9;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.buy-btn:hover{background:#836EF9;color:#fff}
+.buy-btn:disabled{border-color:#333;color:#444;cursor:not-allowed}
+.owned-badge{font-size:11px;background:#1a2a1a;color:#4ade80;padding:4px 10px;border-radius:20px;border:1px solid #2a4a2a}
+.dev-addr{font-size:11px;color:#444;font-family:monospace;margin-top:8px}
+.toast{position:fixed;bottom:24px;right:24px;background:#836EF9;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;display:none;z-index:999;max-width:300px}
+.empty{text-align:center;padding:3rem;color:#444;font-size:14px}
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem}
+.tab{background:transparent;border:1px solid #2a2a2a;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;font-family:inherit;color:#666;transition:all 0.2s}
+.tab.active{background:#836EF9;color:#fff;border-color:#836EF9}
+.panel{display:none}
+.panel.active{display:block}
+.network-badge{font-size:11px;background:#1a1a2e;color:#836EF9;padding:3px 10px;border-radius:20px;border:1px solid #2a2a4a}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><span class="logo-dot"></span> Agent Marketplace <span class="network-badge">Monad Testnet</span></div>
+  <div id="wallet-area">
+    <button class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total agents</div><div class="stat-val" id="stat-total">—</div></div>
+    <div class="stat"><div class="stat-label">You own</div><div class="stat-val" id="stat-owned">—</div></div>
+    <div class="stat"><div class="stat-label">Network</div><div class="stat-val" style="font-size:16px;color:#836EF9">Monad</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('browse',this)">Browse agents</button>
+    <button class="tab" onclick="switchTab('list',this)">List agent</button>
+    <button class="tab" onclick="switchTab('owned',this)">My agents</button>
+  </div>
+
+  <div id="browse" class="panel active">
+    <div class="section-title">Available agents</div>
+    <div class="grid" id="agent-grid"><div class="empty">Connect wallet to load agents</div></div>
+  </div>
+
+  <div id="list" class="panel">
+    <div class="list-form">
+      <div class="section-title" style="margin-bottom:1.25rem">List a new AI agent</div>
+      <div class="form-row"><label>Agent name</label><input id="inp-name" placeholder="e.g. DeFi Yield Scout"/></div>
+      <div class="form-row"><label>Description</label><textarea id="inp-desc" placeholder="What does this agent do?"></textarea></div>
+      <div class="form-row"><label>Price (in MON — enter whole number, e.g. 1 = 1 MON)</label><input id="inp-price" type="number" placeholder="1" min="1" step="1"/></div>
+      <button class="submit-btn" id="list-btn" onclick="listAgent()">List agent on Monad</button>
+    </div>
+  </div>
+
+  <div id="owned" class="panel">
+    <div class="section-title">Agents you own</div>
+    <div class="grid" id="owned-grid"><div class="empty">Connect wallet to see your agents</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CONTRACT_ADDRESS = "0xdfbCb09AD8f07602Fd67efEB2DC9574CD06a00b3";
+const ABI = [
+  "function agentCount() view returns (uint256)",
+  "function agents(uint256) view returns (uint256 id, string name, string description, uint256 price, address developer, bool isAvailable)",
+  "function listAgent(string name, string description, uint256 price)",
+  "function buyAgent(uint256 id) payable",
+  "function getOwnedAgents(address user) view returns (uint256[])"
+];
+
+let provider, signer, contract, userAddress;
+
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = err ? '#c0392b' : '#836EF9';
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if (id === 'owned') loadOwnedAgents();
+}
+
+async function connectWallet() {
+  try {
+    if (!window.ethereum) { showToast('No wallet found. Install OKX or MetaMask.', true); return; }
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const network = await provider.getNetwork();
+    if (network.chainId !== 10143n) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x278F' }]
+        });
+      } catch(e) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x278F',
+            chainName: 'Monad Testnet',
+            rpcUrls: ['https://testnet-rpc.monad.xyz/'],
+            nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+            blockExplorerUrls: ['https://testnet.monadscan.com']
+          }]
+        });
+      }
+      provider = new ethers.BrowserProvider(window.ethereum);
+    }
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    const short = userAddress.slice(0,6) + '...' + userAddress.slice(-4);
+    document.getElementById('wallet-area').innerHTML = `<span class="connected-pill">${short}</span>`;
+    showToast('Wallet connected!');
+    loadAgents();
+  } catch(e) {
+    showToast('Connection failed: ' + e.message, true);
+  }
+}
+
+async function loadAgents() {
+  if (!contract) return;
+  try {
+    const count = await contract.agentCount();
+    document.getElementById('stat-total').textContent = count.toString();
+    const grid = document.getElementById('agent-grid');
+    if (count === 0n) { grid.innerHTML = '<div class="empty">No agents listed yet. Be the first!</div>'; return; }
+    let html = '';
+    for (let i = 1; i <= count; i++) {
+      const a = await contract.agents(i);
+      const priceEth = ethers.formatEther(a.price);
+      const shortDev = a.developer.slice(0,6) + '...' + a.developer.slice(-4);
+      html += `<div class="agent-card">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-desc">${a.description}</div>
+        <div class="agent-footer">
+          <span class="price-tag">${priceEth} MON</span>
+          <button class="buy-btn" onclick="buyAgent(${i}, '${a.price}')">Buy</button>
+        </div>
+        <div class="dev-addr">by ${shortDev}</div>
+      </div>`;
+    }
+    grid.innerHTML = html;
+  } catch(e) {
+    showToast('Error loading agents', true);
+  }
+}
+
+async function buyAgent(id, price) {
+  if (!contract) { showToast('Connect wallet first', true); return; }
+  try {
+    showToast('Confirm in wallet...');
+    const tx = await contract.buyAgent(id, { value: price });
+    showToast('Transaction sent! Waiting...');
+    await tx.wait();
+    showToast('Agent purchased!');
+    loadAgents();
+  } catch(e) {
+    showToast('Failed: ' + (e.reason || e.message), true);
+  }
+}
+
+async function listAgent() {
+  if (!contract) { showToast('Connect wallet first', true); return; }
+  const name = document.getElementById('inp-name').value.trim();
+  const desc = document.getElementById('inp-desc').value.trim();
+  const priceInput = document.getElementById('inp-price').value.trim();
+  if (!name || !desc || !priceInput) { showToast('Fill all fields', true); return; }
+  const priceWei = ethers.parseEther(priceInput);
+  try {
+    document.getElementById('list-btn').disabled = true;
+    showToast('Confirm in wallet...');
+    const tx = await contract.listAgent(name, desc, priceWei);
+    showToast('Listing... waiting for confirmation');
+    await tx.wait();
+    showToast('Agent listed successfully!');
+    document.getElementById('inp-name').value = '';
+    document.getElementById('inp-desc').value = '';
+    document.getElementById('inp-price').value = '';
+    loadAgents();
+  } catch(e) {
+    showToast('Failed: ' + (e.reason || e.message), true);
+  } finally {
+    document.getElementById('list-btn').disabled = false;
+  }
+}
+
+async function loadOwnedAgents() {
+  if (!contract || !userAddress) { document.getElementById('owned-grid').innerHTML = '<div class="empty">Connect wallet first</div>'; return; }
+  try {
+    const ids = await contract.getOwnedAgents(userAddress);
+    document.getElementById('stat-owned').textContent = ids.length;
+    const grid = document.getElementById('owned-grid');
+    if (!ids.length) { grid.innerHTML = '<div class="empty">You haven\'t purchased any agents yet</div>'; return; }
+    let html = '';
+    for (const id of ids) {
+      const a = await contract.agents(id);
+      const priceEth = ethers.formatEther(a.price);
+      html += `<div class="agent-card">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-desc">${a.description}</div>
+        <div class="agent-footer">
+          <span class="price-tag">${priceEth} MON</span>
+          <span class="owned-badge">✓ Owned</span>
+        </div>
+      </div>`;
+    }
+    grid.innerHTML = html;
+  } catch(e) {
+    showToast('Error loading owned agents', true);
+  }
+}
+</script>
+</body>
+</html>
