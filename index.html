@@ -1,278 +1,175 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentX — AI Agent Marketplace on Monad</title>
+<title>SpaceRelay — Monad Telemetry & Node Infrastructure</title>
+<!-- Tailwind CSS & Google Fonts -->
+<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Space Grotesk', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        },
+        colors: {
+          cyber: {
+            black: '#030303',
+            dark: '#08090d',
+            card: '#0f111a',
+            border: '#1f2438',
+            accent: '#0ea5e9',
+            glow: '#38bdf8',
+            success: '#10b981',
+          }
+        }
+      }
+    }
+  }
+</script>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap');
-
-:root {
-  --bg: #09090b;
-  --bg2: #111114;
-  --bg3: #18181b;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-  --text: #fafafa;
-  --text2: #a1a1aa;
-  --text3: #52525b;
-  --accent: #836EF9;
-  --accent2: #a78bfa;
-  --accent-glow: rgba(131,110,249,0.15);
-  --cyan: #22d3ee;
-  --green: #4ade80;
-  --red: #f87171;
-}
-[data-theme="light"] {
-  --bg: #ffffff;
-  --bg2: #f4f4f5;
-  --bg3: #e4e4e7;
-  --border: rgba(0,0,0,0.07);
-  --border2: rgba(0,0,0,0.12);
-  --text: #09090b;
-  --text2: #52525b;
-  --text3: #a1a1aa;
-  --accent: #6d28d9;
-  --accent2: #7c3aed;
-  --accent-glow: rgba(109,40,217,0.1);
-  --cyan: #0891b2;
-  --green: #16a34a;
-  --red: #dc2626;
-}
-
-*{box-sizing:border-box;margin:0;padding:0;transition:background-color 0.2s,color 0.2s,border-color 0.2s}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-
-/* SCROLLBAR */
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
-
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;background:rgba(9,9,11,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
-[data-theme="light"] nav{background:rgba(255,255,255,0.85)}
-.nav-logo{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--text)}
-.logo-icon{width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px}
-.nav-right{display:flex;align-items:center;gap:12px}
-.theme-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
-.theme-btn:hover{border-color:var(--accent);color:var(--accent)}
-.connect-btn{background:var(--accent);color:#fff;border:none;padding:0 18px;height:36px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.connect-btn:hover{background:var(--accent2)}
-.connect-btn.connected{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
-.net-badge{font-size:11px;background:var(--accent-glow);color:var(--accent2);padding:2px 8px;border-radius:20px;border:1px solid var(--accent);font-weight:500}
-
-/* HERO */
-.hero{padding:120px 2rem 80px;max-width:900px;margin:0 auto;text-align:center}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--accent2);background:var(--accent-glow);border:1px solid var(--accent);padding:4px 14px;border-radius:20px;margin-bottom:24px;font-weight:500}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
-.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,6vw,72px);font-weight:700;line-height:1.05;letter-spacing:-0.02em;margin-bottom:20px}
-.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{font-size:18px;color:var(--text2);line-height:1.6;max-width:560px;margin:0 auto 40px}
-.hero-cta{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
-.btn-primary{background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px;transform:translateY(0);transition:transform 0.15s,box-shadow 0.15s}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--accent-glow)}
-.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border2);padding:12px 28px;border-radius:10px;font-size:15px;cursor:pointer;font-family:'Inter',sans-serif}
-.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
-
-/* STATS RIBBON */
-.stats-ribbon{display:flex;align-items:center;justify-content:center;gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 2rem;overflow-x:auto;margin:0}
-.stat-item{text-align:center;padding:0 32px;border-right:1px solid var(--border);flex-shrink:0}
-.stat-item:last-child{border-right:none}
-.stat-num{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:var(--text);display:block}
-.stat-label{font-size:12px;color:var(--text3);margin-top:2px}
-
-/* APP SECTION */
-.app-section{max-width:1100px;margin:0 auto;padding:3rem 2rem 6rem}
-
-/* TABS */
-.tabs{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:2rem;width:fit-content}
-.tab{background:transparent;border:none;color:var(--text2);padding:8px 20px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
-.tab.active{background:var(--bg);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
-[data-theme="light"] .tab.active{box-shadow:0 1px 4px rgba(0,0,0,0.1)}
-
-.panel{display:none;animation:fadeIn 0.2s ease}
-.panel.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* AGENT GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.agent-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.5rem;cursor:default;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;animation:cardIn 0.3s ease both}
-.agent-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 12px 32px var(--accent-glow)}
-@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
-.agent-icon{width:40px;height:40px;border-radius:10px;background:var(--accent-glow);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.card-id{font-size:11px;color:var(--text3);font-family:monospace}
-.agent-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px}
-.agent-desc{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:16px;min-height:40px}
-.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
-.price-tag{display:flex;align-items:baseline;gap:4px}
-.price-num{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--accent)}
-.price-sym{font-size:12px;color:var(--text3)}
-.buy-btn{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px;transition:transform 0.1s,background 0.15s}
-.buy-btn:hover{background:var(--accent2);transform:scale(1.03)}
-.buy-btn:active{transform:scale(0.97)}
-.buy-btn:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed;transform:none}
-.owned-pill{font-size:11px;background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.3);padding:4px 12px;border-radius:20px;font-weight:500}
-.dev-addr{font-size:11px;color:var(--text3);font-family:monospace;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-
-/* FORM */
-.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:560px}
-.form-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;margin-bottom:4px}
-.form-sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
-.field{margin-bottom:1rem}
-.field label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
-.field input,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s,box-shadow 0.15s}
-.field input:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-.field textarea{height:80px;resize:none}
-.field-hint{font-size:12px;color:var(--text3);margin-top:4px}
-.list-submit{background:var(--accent);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;width:100%;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s,transform 0.1s}
-.list-submit:hover{background:var(--accent2)}
-.list-submit:active{transform:scale(0.99)}
-.list-submit:disabled{background:var(--bg3);color:var(--text3);cursor:not-allowed}
-
-/* EMPTY */
-.empty-state{text-align:center;padding:4rem 2rem;color:var(--text3)}
-.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4}
-.empty-title{font-size:16px;font-weight:500;color:var(--text2);margin-bottom:6px}
-.empty-sub{font-size:14px}
-
-/* SPINNER */
-.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* TOAST */
-#toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:12px 18px;font-size:13px;color:var(--text);display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:toastIn 0.25s ease;max-width:320px}
-.toast.success{border-color:rgba(74,222,128,0.4)}
-.toast.error{border-color:rgba(248,113,113,0.4)}
-.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.toast.success .toast-dot{background:var(--green)}
-.toast.error .toast-dot{background:var(--red)}
-.toast.info .toast-dot{background:var(--accent)}
-@keyframes toastIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
-
-/* LOADING SKELETONS */
-.skeleton{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel-card{height:200px;border-radius:16px}
+  body {
+    background-color: #030303;
+    background-image: 
+      linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .glass {
+    background: rgba(15, 17, 26, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .glow-hover:hover {
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
-<body>
+<body class="text-slate-200 font-sans min-h-screen selection:bg-sky-500/30 selection:text-sky-200">
 
-<!-- NAV -->
-<nav>
-  <div class="nav-logo">
-    <div class="logo-icon">⚡</div>
-    AgentX
-    <span class="net-badge">Monad Testnet</span>
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 right-0 h-16 border-b border-cyber-border/50 glass z-50 flex items-center justify-between px-6 md:px-12">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 bg-sky-500 rounded flex items-center justify-center text-cyber-black font-bold text-sm shadow-[0_0_15px_rgba(14,165,233,0.5)]">📡</div>
+    <span class="font-bold tracking-tight text-xl text-white">Space<span class="text-sky-400">Relay</span></span>
+    <span class="hidden sm:inline-block font-mono text-[10px] uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Telemetry Grid</span>
   </div>
-  <div class="nav-right">
-    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-btn">🌙</button>
-    <div id="wallet-area">
-      <button class="connect-btn" onclick="connectWallet()">
-        <span>⬡</span> Connect Wallet
-      </button>
-    </div>
+  <div id="wallet-area">
+    <button onclick="connectWallet()" class="font-mono text-xs font-semibold px-4 h-9 bg-transparent hover:bg-sky-500/10 text-sky-400 border border-sky-500/30 hover:border-sky-400 rounded transition-all duration-200 flex items-center gap-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+      CONNECT TERMINAL
+    </button>
   </div>
 </nav>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="hero-eyebrow">
-    <span class="pulse"></span>
-    Live on Monad Testnet · Chain ID 10143
+<section class="max-w-5xl mx-auto pt-32 pb-16 px-6 text-center">
+  <div class="inline-flex items-center gap-2 px-3 py-1 border border-sky-500/20 bg-sky-500/5 rounded-full text-xs font-mono text-sky-400 mb-6 shadow-sm">
+    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
+    MONAD TESTNET LIVE · CHAIN 10143
   </div>
-  <h1>The Marketplace for<br><span>Autonomous AI Agents</span></h1>
-  <p>Deploy, discover, and trade AI agents that own wallets, execute transactions, and operate on Monad — the fastest EVM chain on earth.</p>
-  <div class="hero-cta">
-    <button class="btn-primary" onclick="scrollToApp()">
-      ⚡ Open Marketplace
+  <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
+    Decentralized Telemetry & <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Node Infrastructure Relay</span>
+  </h1>
+  <p class="font-mono text-xs md:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
+    Enforcing sub-second asynchronous infrastructure links over Monad's parallel validation engine. Lease edge telemetry pipelines or register active network clusters on-chain.
+  </p>
+  <div class="flex items-center justify-center gap-4">
+    <button onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})" class="bg-sky-500 hover:bg-sky-400 text-cyber-black font-bold text-xs px-6 h-11 rounded tracking-wide transition-all duration-150 shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:scale-[1.02]">
+      EXPLORE REGISTRY
     </button>
-    <button class="btn-secondary" onclick="document.querySelector('[data-tab=list]').click();scrollToApp()">
-      + List Your Agent
+    <button onclick="switchTab('list', document.getElementById('tab-list'))" class="font-mono text-xs bg-cyber-card border border-cyber-border/80 hover:border-sky-500/40 px-6 h-11 rounded tracking-wide transition-all duration-150">
+      + BROADCAST NODE LINK
     </button>
   </div>
 </section>
 
 <!-- STATS RIBBON -->
-<div class="stats-ribbon">
-  <div class="stat-item">
-    <span class="stat-num" id="ribbon-agents">—</span>
-    <div class="stat-label">Agents Listed</div>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">10,000</span>
-    <div class="stat-label">TPS on Monad</div>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">&lt;$0.01</span>
-    <div class="stat-label">Gas Per Tx</div>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">&lt;1s</span>
-    <div class="stat-label">Block Time</div>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">EVM</span>
-    <div class="stat-label">Compatible</div>
-  </div>
-</div>
-
-<!-- APP -->
-<div class="app-section" id="app">
-  <div class="tabs">
-    <button class="tab active" data-tab="browse" onclick="switchTab('browse',this)">Marketplace</button>
-    <button class="tab" data-tab="list" onclick="switchTab('list',this)">List Agent</button>
-    <button class="tab" data-tab="owned" onclick="switchTab('owned',this)">My Agents</button>
-  </div>
-
-  <!-- BROWSE -->
-  <div id="browse" class="panel active">
-    <div class="grid" id="agent-grid">
-      <div class="skeleton skel-card"></div>
-      <div class="skeleton skel-card"></div>
-      <div class="skeleton skel-card"></div>
+<div class="border-y border-cyber-border/40 bg-cyber-dark/40 glass py-6 mb-16">
+  <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 px-6 text-center">
+    <div class="border-r border-cyber-border/40 last:border-0">
+      <span id="ribbon-count" class="text-2xl font-bold text-white tracking-tight">—</span>
+      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Active Uplinks</span>
     </div>
-  </div>
-
-  <!-- LIST -->
-  <div id="list" class="panel">
-    <div class="form-card">
-      <div class="form-title">List a New Agent</div>
-      <div class="form-sub">Deploy your AI agent to the marketplace. Buyers pay you directly in MON.</div>
-      <div class="field">
-        <label>Agent Name</label>
-        <input id="inp-name" placeholder="e.g. DeFi Yield Scout" />
-      </div>
-      <div class="field">
-        <label>Description</label>
-        <textarea id="inp-desc" placeholder="What does this agent do? What makes it valuable?"></textarea>
-      </div>
-      <div class="field">
-        <label>Price (MON)</label>
-        <input id="inp-price" type="number" placeholder="1.0" min="0.001" step="0.001" />
-        <div class="field-hint">Buyers will send this exact amount in MON when purchasing.</div>
-      </div>
-      <button class="list-submit" id="list-btn" onclick="listAgent()">
-        ⚡ Deploy to Marketplace
-      </button>
+    <div class="border-r border-cyber-border/40 last:border-0">
+      <span class="text-2xl font-bold text-white tracking-tight">99.99%</span>
+      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Relay Uptime</span>
     </div>
-  </div>
-
-  <!-- OWNED -->
-  <div id="owned" class="panel">
-    <div class="grid" id="owned-grid">
-      <div class="empty-state">
-        <div class="empty-icon">🤖</div>
-        <div class="empty-title">Connect your wallet</div>
-        <div class="empty-sub">Your purchased agents will appear here.</div>
-      </div>
+    <div class="border-r border-cyber-border/40 last:border-0">
+      <span class="text-2xl font-bold text-white tracking-tight">&lt;0.2ms</span>
+      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Data Latency</span>
+    </div>
+    <div class="last:border-0">
+      <span class="text-2xl font-bold text-white tracking-tight">10,000+</span>
+      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Monad TPS Sync</span>
     </div>
   </div>
 </div>
+
+<!-- WORKSPACE -->
+<main class="max-w-7xl mx-auto px-6 pb-24" id="app">
+  <!-- TABS -->
+  <div class="flex gap-6 border-b border-cyber-border/60 mb-8 font-mono text-xs uppercase tracking-wider">
+    <button id="tab-browse" class="tab pb-3 text-sky-400 border-b-2 border-sky-400 font-semibold cursor-pointer" onclick="switchTab('browse',this)">Global Relay Registry</button>
+    <button id="tab-list" class="tab pb-3 text-slate-500 hover:text-slate-300 border-b-2 border-transparent cursor-pointer" onclick="switchTab('list',this)">Register Telemetry Link</button>
+    <button id="tab-owned" class="tab pb-3 text-slate-500 hover:text-slate-300 border-b-2 border-transparent cursor-pointer" onclick="switchTab('owned',this)">Active Hardware Leases</button>
+  </div>
+
+  <!-- PANELS -->
+  <div id="browse" class="panel block animate-[fadeIn_0.2s_ease-out]">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="node-grid"></div>
+  </div>
+
+  <div id="list" class="panel hidden animate-[fadeIn_0.2s_ease-out]">
+    <div class="bg-cyber-card border border-cyber-border/80 rounded-xl p-8 max-w-xl mx-auto relative shadow-2xl">
+      <h3 class="text-xl font-bold text-white mb-1">Initialize Node Stream</h3>
+      <p class="text-xs font-mono text-slate-500 mb-6">Broadcast hardware tracking metrics down into the decentralized matrix.</p>
+      
+      <div class="space-y-5">
+        <div>
+          <label class="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">Relay Node Identifier</label>
+          <input id="inp-name" type="text" placeholder="e.g. Asia-Pacific Edge Cluster S-01" class="w-full bg-cyber-black border border-cyber-border text-white text-sm rounded px-4 py-3 outline-none focus:border-sky-500 transition-colors" />
+        </div>
+        <div>
+          <label class="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">Cluster Telemetry Properties</label>
+          <textarea id="inp-desc" placeholder="Specify RAM capability, bandwidth speeds, hardware thresholds..." class="w-full h-24 bg-cyber-black border border-cyber-border text-white text-sm rounded px-4 py-3 outline-none focus:border-sky-500 transition-colors resize-none font-mono text-xs"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">Lease Security Bond (MON)</label>
+          <input id="inp-price" type="number" placeholder="0.25" step="0.05" class="w-full bg-cyber-black border border-cyber-border text-white text-sm rounded px-4 py-3 outline-none focus:border-sky-500 transition-colors" />
+        </div>
+        <button id="list-btn" onclick="listAgent()" class="w-full mt-2 bg-sky-500 hover:bg-sky-400 text-cyber-black font-bold text-xs h-12 rounded transition-colors uppercase tracking-wider">
+          ⚡ Broadcast Uplink Lease
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="owned" class="panel hidden animate-[fadeIn_0.2s_ease-out]">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="owned-grid">
+      <div class="text-center py-12 text-slate-500 font-mono text-xs col-span-full border border-dashed border-cyber-border/50 rounded-xl bg-cyber-card/30">
+        Authentication missing. Connect hardware keys to index active leases.
+      </div>
+    </div>
+  </div>
+</main>
 
 <div id="toast-container"></div>
 
@@ -285,228 +182,161 @@ const ABI = [
   "function buyAgent(uint256 id) payable",
   "function getOwnedAgents(address user) view returns (uint256[])"
 ];
-const AGENT_EMOJIS = ["🤖","🧠","⚡","🔮","🛰️","🎯","💎","🔥"];
 
 let provider, signer, contract, userAddress;
 
-// THEME
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
-}
-
-// SCROLL
-function scrollToApp() {
-  document.getElementById('app').scrollIntoView({behavior:'smooth'});
-}
-
-// TABS
 function switchTab(id, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.remove('text-sky-400', 'border-sky-400', 'font-semibold');
+    t.classList.add('text-slate-500', 'border-transparent');
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+  
+  el.classList.add('text-sky-400', 'border-sky-400', 'font-semibold');
+  el.classList.remove('text-slate-500', 'border-transparent');
+  document.getElementById(id).classList.remove('hidden');
+  
   if (id === 'owned') loadOwnedAgents();
-  scrollToApp();
 }
 
-// TOAST
-function toast(msg, type = 'info') {
+function toast(msg, isError = false) {
   const c = document.getElementById('toast-container');
   const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<span class="toast-dot"></span>${msg}`;
+  t.className = `toast font-mono text-xs border p-4 rounded-lg bg-cyber-card shadow-2xl min-w-[280px] transition-all duration-300 transform translate-y-2 opacity-0 ${isError ? 'border-red-500/40 text-red-400' : 'border-sky-500/40 text-sky-400'}`;
+  t.textContent = `> ${msg}`;
   c.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(12px)'; t.style.transition='all 0.2s'; setTimeout(()=>t.remove(), 200); }, 3000);
+  setTimeout(() => { t.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+  setTimeout(() => { t.classList.add('translate-y-[-10px]', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
 }
 
-// WALLET
 async function connectWallet() {
-  if (!window.ethereum) { toast('No wallet detected. Install OKX or MetaMask.', 'error'); return; }
+  if (!window.ethereum) { toast('No cryptographic wallet extension detected.', true); return; }
   try {
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
-    const net = await provider.getNetwork();
-    if (net.chainId !== 10143n) {
-      try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x278F' }] });
-      } catch(e) {
-        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
-          chainId: '0x278F',
-          chainName: 'Monad Testnet',
-          rpcUrls: ['https://testnet-rpc.monad.xyz/'],
-          nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
-          blockExplorerUrls: ['https://testnet.monadscan.com']
-        }]});
-      }
-      provider = new ethers.BrowserProvider(window.ethereum);
-    }
     signer = await provider.getSigner();
     userAddress = await signer.getAddress();
     contract = new ethers.Contract(CONTRACT, ABI, signer);
     const bal = await provider.getBalance(userAddress);
-    const balFmt = parseFloat(ethers.formatEther(bal)).toFixed(2);
-    const short = userAddress.slice(0,6) + '…' + userAddress.slice(-4);
     document.getElementById('wallet-area').innerHTML = `
-      <button class="connect-btn connected">
-        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
-        ${short} · ${balFmt} MON
-      </button>`;
-    toast('Wallet connected — welcome!', 'success');
+      <div class="font-mono text-xs tracking-tight border border-cyber-border bg-cyber-card/80 px-4 h-9 rounded flex items-center gap-3">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+        <span class="text-white">${userAddress.slice(0,6)}…${userAddress.slice(-4)}</span>
+        <span class="text-slate-500">|</span>
+        <span class="text-sky-400 font-bold">${parseFloat(ethers.formatEther(bal)).toFixed(2)} MON</span>
+      </div>`;
+    toast('Network terminal successfully authenticated.');
     loadAgents();
-  } catch(e) {
-    toast('Connection failed: ' + (e.message || 'Unknown error'), 'error');
-  }
+  } catch(e) { toast('Terminal signature extraction failed.', true); }
 }
 
-// LOAD AGENTS
 async function loadAgents() {
-  const grid = document.getElementById('agent-grid');
+  const grid = document.getElementById('node-grid');
   try {
-    let count;
-    if (contract) {
-      count = await contract.agentCount();
-    } else {
-      // read-only fallback
-      const ro = new ethers.JsonRpcProvider('https://testnet-rpc.monad.xyz/');
-      const roContract = new ethers.Contract(CONTRACT, ABI, ro);
-      count = await roContract.agentCount();
-    }
-    document.getElementById('ribbon-agents').textContent = count.toString();
+    const src = contract || new ethers.Contract(CONTRACT, ABI, new ethers.JsonRpcProvider('https://testnet-rpc.monad.xyz/'));
+    const count = await src.agentCount();
+    document.getElementById('ribbon-count').textContent = count.toString();
     if (count === 0n) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">🌐</div>
-        <div class="empty-title">No agents yet</div>
-        <div class="empty-sub">Be the first to list an AI agent on Monad.</div>
-      </div>`;
+      grid.innerHTML = `<div class="text-center py-16 text-slate-500 font-mono text-xs col-span-full border border-dashed border-cyber-border/50 rounded-xl bg-cyber-card/30">No active telemetry pipelines currently deployed on-chain.</div>`;
       return;
     }
     let html = '';
-    const src = contract || new ethers.Contract(CONTRACT, ABI, new ethers.JsonRpcProvider('https://testnet-rpc.monad.xyz/'));
     for (let i = 1; i <= count; i++) {
       const a = await src.agents(i);
-      const priceEth = parseFloat(ethers.formatEther(a.price)).toFixed(3);
-      const shortDev = a.developer.slice(0,6) + '…' + a.developer.slice(-4);
-      const emoji = AGENT_EMOJIS[(i-1) % AGENT_EMOJIS.length];
       const isOwner = userAddress && a.developer.toLowerCase() === userAddress.toLowerCase();
-      html += `<div class="agent-card" style="animation-delay:${(i-1)*0.06}s">
-        <div class="card-header">
-          <div class="agent-icon">${emoji}</div>
-          <span class="card-id">#${i}</span>
-        </div>
-        <div class="agent-name">${escHtml(a.name)}</div>
-        <div class="agent-desc">${escHtml(a.description)}</div>
-        <div class="card-footer">
-          <div class="price-tag">
-            <span class="price-num">${priceEth}</span>
-            <span class="price-sym">MON</span>
+      html += `
+        <div class="bg-cyber-card border border-cyber-border/80 rounded-xl p-6 relative group transition-all duration-300 glow-hover">
+          <div class="flex justify-between items-center mb-4">
+            <span class="flex items-center gap-2 text-[10px] font-mono tracking-widest text-emerald-400 bg-emerald-400/5 px-2 py-0.5 border border-emerald-500/10 rounded">
+              <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_6px_#10b981]"></span>ONLINE
+            </span>
+            <span class="font-mono text-[10px] text-slate-600 uppercase">PIPE_ID_#${i}</span>
           </div>
-          ${isOwner
-            ? '<span class="owned-pill">✓ Your listing</span>'
-            : `<button class="buy-btn" id="buy-${i}" onclick="buyAgent(${i},'${a.price}')">Buy Agent</button>`}
-        </div>
-        <div class="dev-addr">Listed by ${shortDev}</div>
-      </div>`;
+          <h4 class="text-lg font-bold text-white mb-2 tracking-tight group-hover:text-sky-400 transition-colors">${String(a.name)}</h4>
+          <p class="text-xs text-slate-400 font-mono leading-relaxed h-12 overflow-hidden mb-6">${String(a.description)}</p>
+          
+          <div class="grid grid-cols-2 gap-2 border-t border-dashed border-cyber-border/60 pt-4 mb-5 font-mono text-[10px] text-slate-500">
+            <div>LATENCY: <span class="text-slate-300 font-semibold">0.18ms</span></div>
+            <div>BANDWIDTH: <span class="text-slate-300 font-semibold">10 Gbps</span></div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="block text-[9px] font-mono tracking-wider text-slate-600 uppercase">Bond Required</span>
+              <span class="text-base font-bold text-white tracking-tight">${ethers.formatEther(a.price)} <span class="text-[10px] text-sky-400 font-normal">MON</span></span>
+            </div>
+            ${isOwner ? '<span class="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded">✓ Local Owner</span>' : `<button id="lease-${i}" onclick="leaseNode(${i},'${a.price}')" class="font-mono text-xs font-bold bg-sky-500 hover:bg-sky-400 text-cyber-black px-4 py-2 rounded transition-colors">Lease Pipe</button>`}
+          </div>
+        </div>`;
     }
     grid.innerHTML = html;
-  } catch(e) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-      <div class="empty-icon">⚠️</div>
-      <div class="empty-title">Could not load agents</div>
-      <div class="empty-sub">Check your connection and try again.</div>
-    </div>`;
-  }
+  } catch(e) { grid.innerHTML = `<div class="text-center py-12 text-red-400 font-mono text-xs col-span-full">Telemetry collection buffer initialization error.</div>`; }
 }
 
-// BUY
-async function buyAgent(id, price) {
-  if (!contract) { toast('Connect your wallet first', 'error'); return; }
-  const btn = document.getElementById(`buy-${id}`);
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Buying…'; }
+async function leaseNode(id, price) {
+  if (!contract) { toast('Authenticate crypto terminal parameters first.', true); return; }
+  const btn = document.getElementById(`lease-${id}`);
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
   try {
-    toast('Confirm the transaction in your wallet…', 'info');
+    toast('Awaiting manual terminal signature confirmation...');
     const tx = await contract.buyAgent(id, { value: price });
-    toast('Transaction sent — waiting for confirmation…', 'info');
+    toast('Relay initialization broadcasted... processing.');
     await tx.wait();
-    toast('Agent purchased successfully! 🎉', 'success');
+    toast('Pipeline secure connection verified! Channel established.');
     loadAgents();
-  } catch(e) {
-    toast('Transaction failed: ' + (e.reason || e.message || 'Unknown'), 'error');
-    if (btn) { btn.disabled = false; btn.innerHTML = 'Buy Agent'; }
-  }
+  } catch(e) { toast('Lease validation protocol tracking aborted.', true); btn.disabled = false; btn.innerHTML = 'Lease Pipe'; }
 }
 
-// LIST
 async function listAgent() {
-  if (!contract) { toast('Connect your wallet first', 'error'); return; }
+  if (!contract) { toast('Authenticate terminal parameters first.', true); return; }
   const name = document.getElementById('inp-name').value.trim();
   const desc = document.getElementById('inp-desc').value.trim();
-  const priceRaw = document.getElementById('inp-price').value.trim();
-  if (!name || !desc || !priceRaw) { toast('Fill in all fields', 'error'); return; }
-  let priceWei;
-  try { priceWei = ethers.parseEther(priceRaw); } catch(e) { toast('Invalid price', 'error'); return; }
+  const price = document.getElementById('inp-price').value.trim();
+  if (!name || !desc || !price) { toast('Incomplete data stream buffers detected.', true); return; }
   const btn = document.getElementById('list-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Deploying…';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> PACKING STREAM BUFFER...';
   try {
-    toast('Confirm in your wallet…', 'info');
-    const tx = await contract.listAgent(name, desc, priceWei);
-    toast('Transaction sent — waiting…', 'info');
+    const tx = await contract.listAgent(name, desc, ethers.parseEther(price));
+    toast('Broadcasting sync metrics across parallel workers...');
     await tx.wait();
-    toast('Agent listed on Monad! 🚀', 'success');
+    toast('Distributed Uplink broadcast secure on-chain.');
     document.getElementById('inp-name').value = '';
     document.getElementById('inp-desc').value = '';
     document.getElementById('inp-price').value = '';
+    switchTab('browse', document.getElementById('tab-browse'));
     loadAgents();
-  } catch(e) {
-    toast('Failed: ' + (e.reason || e.message || 'Unknown'), 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '⚡ Deploy to Marketplace';
-  }
+  } catch(e) { toast('Broadcast matrix parameter injection rejected.', true); }
+  finally { btn.disabled = false; btn.innerHTML = '⚡ Broadcast Uplink Lease'; }
 }
 
-// OWNED
 async function loadOwnedAgents() {
   const grid = document.getElementById('owned-grid');
-  if (!contract || !userAddress) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-title">Connect your wallet</div><div class="empty-sub">See agents you've purchased.</div></div>`;
-    return;
-  }
+  if (!contract) return;
   try {
     const ids = await contract.getOwnedAgents(userAddress);
-    if (!ids.length) {
-      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🤖</div><div class="empty-title">No agents yet</div><div class="empty-sub">Browse the marketplace and buy your first agent.</div></div>`;
-      return;
-    }
+    if (!ids.length) { grid.innerHTML = `<div class="text-center py-12 text-slate-500 font-mono text-xs col-span-full border border-dashed border-cyber-border/50 rounded-xl bg-cyber-card/30">No active telemetry pipelines mapped to current cryptographic profile.</div>`; return; }
     let html = '';
     for (const id of ids) {
       const a = await contract.agents(id);
-      const priceEth = parseFloat(ethers.formatEther(a.price)).toFixed(3);
-      const emoji = AGENT_EMOJIS[(Number(id)-1) % AGENT_EMOJIS.length];
-      html += `<div class="agent-card">
-        <div class="card-header"><div class="agent-icon">${emoji}</div><span class="card-id">#${id}</span></div>
-        <div class="agent-name">${escHtml(a.name)}</div>
-        <div class="agent-desc">${escHtml(a.description)}</div>
-        <div class="card-footer">
-          <div class="price-tag"><span class="price-num">${priceEth}</span><span class="price-sym">MON</span></div>
-          <span class="owned-pill">✓ Owned</span>
-        </div>
-      </div>`;
+      html += `
+        <div class="bg-cyber-card border border-cyber-border/80 rounded-xl p-6 relative">
+          <div class="flex justify-between items-center mb-4">
+            <span class="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-sky-400 bg-sky-400/5 px-2 py-0.5 border border-sky-500/10 rounded">
+              📡 ACTIVE_UPLINK
+            </span>
+            <span class="font-mono text-[10px] text-slate-600">PIPE_#${id}</span>
+          </div>
+          <h4 class="text-lg font-bold text-white mb-2 tracking-tight">${String(a.name)}</h4>
+          <p class="text-xs text-slate-400 font-mono leading-relaxed h-12 overflow-hidden mb-4">${String(a.description)}</p>
+          <div class="text-[10px] font-mono text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 p-2 rounded">
+            > STREAM_STATUS: STABLE_SYNC_OK
+          </div>
+        </div>`;
     }
     grid.innerHTML = html;
-  } catch(e) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error loading</div><div class="empty-sub">${e.message}</div></div>`;
-  }
+  } catch(e) {}
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// init — load agents read-only on page load
 loadAgents();
 </script>
 </body>
