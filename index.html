@@ -3,29 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpaceRelay — Monad Telemetry & Node Infrastructure</title>
-<!-- Tailwind CSS & Google Fonts -->
+<title>MonadPass // Quantum Anti-Scalper Terminal</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
 
 <script>
   tailwind.config = {
     theme: {
       extend: {
         fontFamily: {
-          sans: ['Space Grotesk', 'sans-serif'],
           mono: ['JetBrains Mono', 'monospace'],
+          display: ['Space Grotesk', 'sans-serif'],
         },
         colors: {
           cyber: {
-            black: '#030303',
-            dark: '#08090d',
-            card: '#0f111a',
-            border: '#1f2438',
-            accent: '#0ea5e9',
-            glow: '#38bdf8',
-            success: '#10b981',
+            bg: '#040406',
+            card: '#0a0b12',
+            border: '#1b1d30',
+            neon: '#bc6ff1',
+            matrix: '#06b6d4',
           }
         }
       }
@@ -35,26 +32,24 @@
 
 <style>
   body {
-    background-color: #030303;
+    background-color: #040406;
     background-image: 
-      linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+      linear-gradient(rgba(188, 111, 241, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(188, 111, 241, 0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
-  .glass {
-    background: rgba(15, 17, 26, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+  .glow-border:hover {
+    box-shadow: 0 0 30px rgba(188, 111, 241, 0.2);
+    border-color: #bc6ff1;
   }
-  .glow-hover:hover {
-    box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
-    border-color: rgba(56, 189, 248, 0.4);
+  .barcode-line {
+    background: repeating-linear-gradient(90deg, #334155, #334155 2px, transparent 2px, transparent 6px);
   }
   .spinner {
     width: 14px;
     height: 14px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: #38bdf8;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: #bc6ff1;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
     display: inline-block;
@@ -62,116 +57,123 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
-<body class="text-slate-200 font-sans min-h-screen selection:bg-sky-500/30 selection:text-sky-200">
+<body class="text-slate-300 font-mono min-h-screen selection:bg-purple-500/30 selection:text-purple-200 antialiased">
 
-<!-- NAVBAR -->
-<nav class="fixed top-0 left-0 right-0 h-16 border-b border-cyber-border/50 glass z-50 flex items-center justify-between px-6 md:px-12">
-  <div class="flex items-center gap-3">
-    <div class="w-7 h-7 bg-sky-500 rounded flex items-center justify-center text-cyber-black font-bold text-sm shadow-[0_0_15px_rgba(14,165,233,0.5)]">📡</div>
-    <span class="font-bold tracking-tight text-xl text-white">Space<span class="text-sky-400">Relay</span></span>
-    <span class="hidden sm:inline-block font-mono text-[10px] uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Telemetry Grid</span>
+<!-- TECH NAVIGATION -->
+<nav class="fixed top-0 left-0 right-0 h-16 border-b border-cyber-border/60 bg-cyber-bg/80 backdrop-blur-md z-50 flex items-center justify-between px-6 md:px-12">
+  <div class="flex items-center gap-4">
+    <div class="w-8 h-8 border border-cyber-neon bg-cyber-neon/10 text-cyber-neon flex items-center justify-center font-black text-base shadow-[0_0_12px_rgba(188,111,241,0.4)]">⬡</div>
+    <span class="font-display font-extrabold text-xl text-white tracking-tighter">MONAD<span class="text-cyber-neon">PASS</span></span>
+    <span class="hidden lg:inline-block text-[9px] font-bold tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 uppercase">QUANTUM SHIELD ENABLED</span>
   </div>
+  
+  <div class="hidden md:flex items-center gap-6 text-[11px] text-slate-500">
+    <div>RADAR_STATUS: <span id="radar-text" class="text-cyber-neon animate-pulse">MONITORING CONCURRENT REQUESTS</span></div>
+  </div>
+
   <div id="wallet-area">
-    <button onclick="connectWallet()" class="font-mono text-xs font-semibold px-4 h-9 bg-transparent hover:bg-sky-500/10 text-sky-400 border border-sky-500/30 hover:border-sky-400 rounded transition-all duration-200 flex items-center gap-2">
-      <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-      CONNECT TERMINAL
+    <button onclick="connectWallet()" class="text-xs tracking-wider border border-cyber-neon/40 hover:border-cyber-neon bg-cyber-neon/5 hover:bg-cyber-neon/20 px-4 h-9 text-white transition-all duration-200">
+      AUTHENTICATE_SIGNATURE
     </button>
   </div>
 </nav>
 
-<!-- HERO -->
-<section class="max-w-5xl mx-auto pt-32 pb-16 px-6 text-center">
-  <div class="inline-flex items-center gap-2 px-3 py-1 border border-sky-500/20 bg-sky-500/5 rounded-full text-xs font-mono text-sky-400 mb-6 shadow-sm">
-    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
-    MONAD TESTNET LIVE · CHAIN 10143
+<!-- FUTURISTIC HERO -->
+<section class="max-w-5xl mx-auto pt-32 pb-12 px-6 text-center">
+  <div class="inline-flex items-center gap-3 px-4 py-1 border border-cyan-500/30 bg-cyan-500/5 text-[10px] text-cyan-400 mb-8 uppercase tracking-widest">
+    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+    System Syncing // 10,000+ Parallel Thread Pools
   </div>
-  <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
-    Decentralized Telemetry & <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Node Infrastructure Relay</span>
+  <h1 class="text-4xl md:text-7xl font-black text-white tracking-tighter leading-none mb-6 font-display uppercase">
+    ANTI-BOT MEMPOOL <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-neon to-cyan-400 drop-shadow-sm">ENTRY PASSPORT CONTRACTS</span>
   </h1>
-  <p class="font-mono text-xs md:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
-    Enforcing sub-second asynchronous infrastructure links over Monad's parallel validation engine. Lease edge telemetry pipelines or register active network clusters on-chain.
+  <p class="text-xs md:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
+    Intercepting high-frequency scalper proxies via Monad's sub-second finality matrix. Distributed allocation nodes secure localized execution tickets for genuine network peers.
   </p>
   <div class="flex items-center justify-center gap-4">
-    <button onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})" class="bg-sky-500 hover:bg-sky-400 text-cyber-black font-bold text-xs px-6 h-11 rounded tracking-wide transition-all duration-150 shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:scale-[1.02]">
-      EXPLORE REGISTRY
+    <button onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})" class="bg-cyber-neon text-black font-bold text-xs px-6 h-11 tracking-wider transition-all shadow-[0_0_20px_rgba(188,111,241,0.4)] hover:scale-[1.01]">
+      QUERY ACCESS REGISTRY
     </button>
-    <button onclick="switchTab('list', document.getElementById('tab-list'))" class="font-mono text-xs bg-cyber-card border border-cyber-border/80 hover:border-sky-500/40 px-6 h-11 rounded tracking-wide transition-all duration-150">
-      + BROADCAST NODE LINK
+    <button onclick="switchTab('list', document.getElementById('tab-list'))" class="text-xs bg-cyber-card border border-cyber-border hover:border-cyan-500/40 px-6 h-11 transition-all tracking-wider">
+      DEPLOY DIGITAL CONTRACT
     </button>
   </div>
 </section>
 
-<!-- STATS RIBBON -->
-<div class="border-y border-cyber-border/40 bg-cyber-dark/40 glass py-6 mb-16">
-  <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 px-6 text-center">
-    <div class="border-r border-cyber-border/40 last:border-0">
-      <span id="ribbon-count" class="text-2xl font-bold text-white tracking-tight">—</span>
-      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Active Uplinks</span>
+<!-- REALTIME NODE ANALYTICS -->
+<div class="border-y border-cyber-border/60 bg-cyber-card/20 backdrop-blur-sm py-6 mb-16">
+  <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 px-6 text-center text-xs">
+    <div class="border-r border-cyber-border/60 last:border-0">
+      <span id="ribbon-count" class="text-2xl font-bold text-white tracking-tight font-display">—</span>
+      <span class="block text-[10px] uppercase tracking-widest text-slate-600 mt-1">Active Core Pipelines</span>
     </div>
-    <div class="border-r border-cyber-border/40 last:border-0">
-      <span class="text-2xl font-bold text-white tracking-tight">99.99%</span>
-      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Relay Uptime</span>
+    <div class="border-r border-cyber-border/60 last:border-0">
+      <span class="text-2xl font-bold text-cyan-400 tracking-tight font-display">0.00ms</span>
+      <span class="block text-[10px] uppercase tracking-widest text-slate-600 mt-1">Bot Attenuation Delay</span>
     </div>
-    <div class="border-r border-cyber-border/40 last:border-0">
-      <span class="text-2xl font-bold text-white tracking-tight">&lt;0.2ms</span>
-      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Data Latency</span>
+    <div class="border-r border-cyber-border/60 last:border-0">
+      <span class="text-2xl font-bold text-white tracking-tight font-display">PARALLEL</span>
+      <span class="block text-[10px] uppercase tracking-widest text-slate-600 mt-1">Execution Mechanism</span>
     </div>
     <div class="last:border-0">
-      <span class="text-2xl font-bold text-white tracking-tight">10,000+</span>
-      <span class="block text-[11px] font-mono uppercase tracking-wider text-slate-500 mt-1">Monad TPS Sync</span>
+      <span class="text-2xl font-bold text-cyber-neon tracking-tight font-display">SECURE</span>
+      <span class="block text-[10px] uppercase tracking-widest text-slate-600 mt-1">Mempool Obfuscation</span>
     </div>
   </div>
 </div>
 
-<!-- WORKSPACE -->
+<!-- DATA FRAMEWAY -->
 <main class="max-w-7xl mx-auto px-6 pb-24" id="app">
-  <!-- TABS -->
-  <div class="flex gap-6 border-b border-cyber-border/60 mb-8 font-mono text-xs uppercase tracking-wider">
-    <button id="tab-browse" class="tab pb-3 text-sky-400 border-b-2 border-sky-400 font-semibold cursor-pointer" onclick="switchTab('browse',this)">Global Relay Registry</button>
-    <button id="tab-list" class="tab pb-3 text-slate-500 hover:text-slate-300 border-b-2 border-transparent cursor-pointer" onclick="switchTab('list',this)">Register Telemetry Link</button>
-    <button id="tab-owned" class="tab pb-3 text-slate-500 hover:text-slate-300 border-b-2 border-transparent cursor-pointer" onclick="switchTab('owned',this)">Active Hardware Leases</button>
+  <!-- INTERFACE TABS -->
+  <div class="flex gap-6 border-b border-cyber-border/60 mb-8 text-xs uppercase tracking-widest font-bold">
+    <button id="tab-browse" class="tab pb-3 text-cyber-neon border-b-2 border-cyber-neon cursor-pointer" onclick="switchTab('browse',this)">[01 // Global Registry]</button>
+    <button id="tab-list" class="tab pb-3 text-slate-500 hover:text-slate-300 border-b-2 border-transparent cursor-pointer" onclick="switchTab('list',this)">[02 // Initialize Node]</button>
+    <button id="tab-owned" class="tab pb-3 text-slate-500 hover:text-slate-300 border-b-2 border-transparent cursor-pointer" onclick="switchTab('owned',this)">[03 // Secured Allocations]</button>
   </div>
 
-  <!-- PANELS -->
-  <div id="browse" class="panel block animate-[fadeIn_0.2s_ease-out]">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="node-grid"></div>
+  <!-- BROWSE PANELS -->
+  <div id="browse" class="panel block">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="event-grid"></div>
   </div>
 
-  <div id="list" class="panel hidden animate-[fadeIn_0.2s_ease-out]">
-    <div class="bg-cyber-card border border-cyber-border/80 rounded-xl p-8 max-w-xl mx-auto relative shadow-2xl">
-      <h3 class="text-xl font-bold text-white mb-1">Initialize Node Stream</h3>
-      <p class="text-xs font-mono text-slate-500 mb-6">Broadcast hardware tracking metrics down into the decentralized matrix.</p>
+  <!-- INITIALIZE PANEL -->
+  <div id="list" class="panel hidden">
+    <div class="bg-cyber-card border border-cyber-border rounded-lg p-8 max-w-xl mx-auto shadow-2xl relative">
+      <div class="absolute top-0 right-0 p-3 text-[10px] text-cyber-neon tracking-widest font-bold">SYS_LOAD // OPTIMAL</div>
+      <h3 class="text-lg font-bold text-white mb-1 uppercase tracking-wider font-display">Generate Access Token Pipeline</h3>
+      <p class="text-[11px] text-slate-500 mb-6 uppercase tracking-tight">Deploy customized consensus rules to allocate verified target entry slots.</p>
       
-      <div class="space-y-5">
+      <div class="space-y-5 text-xs">
         <div>
-          <label class="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">Relay Node Identifier</label>
-          <input id="inp-name" type="text" placeholder="e.g. Asia-Pacific Edge Cluster S-01" class="w-full bg-cyber-black border border-cyber-border text-white text-sm rounded px-4 py-3 outline-none focus:border-sky-500 transition-colors" />
+          <label class="block text-slate-400 uppercase tracking-widest mb-2 font-bold">Target Resource Identification</label>
+          <input id="inp-name" type="text" placeholder="e.g. MONAD CONCURRENT ENG CONCERT" class="w-full bg-cyber-bg border border-cyber-border text-white rounded px-4 py-3 outline-none focus:border-cyber-neon transition-colors font-mono" />
         </div>
         <div>
-          <label class="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">Cluster Telemetry Properties</label>
-          <textarea id="inp-desc" placeholder="Specify RAM capability, bandwidth speeds, hardware thresholds..." class="w-full h-24 bg-cyber-black border border-cyber-border text-white text-sm rounded px-4 py-3 outline-none focus:border-sky-500 transition-colors resize-none font-mono text-xs"></textarea>
+          <label class="block text-slate-400 uppercase tracking-widest mb-2 font-bold">Encrypted Telemetry / Scope Metadata</label>
+          <textarea id="inp-desc" placeholder="Input specific geographical access boundaries, cluster distribution metrics, and lock windows..." class="w-full h-24 bg-cyber-bg border border-cyber-border text-white rounded px-4 py-3 outline-none focus:border-cyber-neon transition-colors resize-none font-mono"></textarea>
         </div>
         <div>
-          <label class="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">Lease Security Bond (MON)</label>
-          <input id="inp-price" type="number" placeholder="0.25" step="0.05" class="w-full bg-cyber-black border border-cyber-border text-white text-sm rounded px-4 py-3 outline-none focus:border-sky-500 transition-colors" />
+          <label class="block text-slate-400 uppercase tracking-widest mb-2 font-bold">Minimum Allocation Stake Bond (MON)</label>
+          <input id="inp-price" type="number" placeholder="0.2" step="0.01" class="w-full bg-cyber-bg border border-cyber-border text-white rounded px-4 py-3 outline-none focus:border-cyber-neon transition-colors font-mono" />
         </div>
-        <button id="list-btn" onclick="listAgent()" class="w-full mt-2 bg-sky-500 hover:bg-sky-400 text-cyber-black font-bold text-xs h-12 rounded transition-colors uppercase tracking-wider">
-          ⚡ Broadcast Uplink Lease
+        <button id="list-btn" onclick="listAgent()" class="w-full bg-cyber-neon text-black font-bold h-12 tracking-widest transition-colors uppercase">
+          ⚡ BROADCAST ACCESS SYSTEM TO CHAIN
         </button>
       </div>
     </div>
   </div>
 
-  <div id="owned" class="panel hidden animate-[fadeIn_0.2s_ease-out]">
+  <!-- SECURED ALLOCATIONS -->
+  <div id="owned" class="panel hidden">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="owned-grid">
-      <div class="text-center py-12 text-slate-500 font-mono text-xs col-span-full border border-dashed border-cyber-border/50 rounded-xl bg-cyber-card/30">
-        Authentication missing. Connect hardware keys to index active leases.
+      <div class="text-center py-16 text-slate-600 text-xs col-span-full border border-dashed border-cyber-border/60 rounded-lg bg-cyber-card/40 uppercase tracking-widest">
+        Terminal disconnected. Extract cryptographic validation variables to query active pass leases.
       </div>
     </div>
   </div>
 </main>
 
-<div id="toast-container"></div>
+<div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
 
 <script>
 const CONTRACT = "0xdfbCb09AD8f07602Fd67efEB2DC9574CD06a00b3";
@@ -185,14 +187,27 @@ const ABI = [
 
 let provider, signer, contract, userAddress;
 
+// RADAR LOOP EFFECT
+const radarPhrases = [
+  "DECRYPTING BOT SIGNATURES...",
+  "BLOCK COMPRESSION RATIO: NOMINAL",
+  "PARALLEL WORKER CYCLES IN SYNC",
+  "MONITORING CONCURRENT ASYNC REQUESTS",
+  "SCALPER PROXY PACKETS INJECTED & BLOCKED"
+];
+setInterval(() => {
+  const el = document.getElementById('radar-text');
+  if (el) el.textContent = radarPhrases[Math.floor(Math.random() * radarPhrases.length)];
+}, 4000);
+
 function switchTab(id, el) {
   document.querySelectorAll('.tab').forEach(t => {
-    t.classList.remove('text-sky-400', 'border-sky-400', 'font-semibold');
+    t.classList.remove('text-cyber-neon', 'border-cyber-neon');
     t.classList.add('text-slate-500', 'border-transparent');
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
   
-  el.classList.add('text-sky-400', 'border-sky-400', 'font-semibold');
+  el.classList.add('text-cyber-neon', 'border-cyber-neon');
   el.classList.remove('text-slate-500', 'border-transparent');
   document.getElementById(id).classList.remove('hidden');
   
@@ -202,15 +217,14 @@ function switchTab(id, el) {
 function toast(msg, isError = false) {
   const c = document.getElementById('toast-container');
   const t = document.createElement('div');
-  t.className = `toast font-mono text-xs border p-4 rounded-lg bg-cyber-card shadow-2xl min-w-[280px] transition-all duration-300 transform translate-y-2 opacity-0 ${isError ? 'border-red-500/40 text-red-400' : 'border-sky-500/40 text-sky-400'}`;
+  t.className = `p-4 border text-[11px] bg-cyber-card shadow-2xl tracking-tight min-w-[280px] font-bold uppercase ${isError ? 'border-red-500/40 text-red-400' : 'border-cyber-neon/40 text-cyber-neon'}`;
   t.textContent = `> ${msg}`;
   c.appendChild(t);
-  setTimeout(() => { t.classList.remove('translate-y-2', 'opacity-0'); }, 50);
-  setTimeout(() => { t.classList.add('translate-y-[-10px]', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
+  setTimeout(() => t.remove(), 4000);
 }
 
 async function connectWallet() {
-  if (!window.ethereum) { toast('No cryptographic wallet extension detected.', true); return; }
+  if (!window.ethereum) { toast('No cryptographic runtime injected.', true); return; }
   try {
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
@@ -219,25 +233,24 @@ async function connectWallet() {
     contract = new ethers.Contract(CONTRACT, ABI, signer);
     const bal = await provider.getBalance(userAddress);
     document.getElementById('wallet-area').innerHTML = `
-      <div class="font-mono text-xs tracking-tight border border-cyber-border bg-cyber-card/80 px-4 h-9 rounded flex items-center gap-3">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+      <div class="text-[11px] border border-cyber-border bg-cyber-card px-4 h-9 flex items-center gap-3">
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]"></span>
         <span class="text-white">${userAddress.slice(0,6)}…${userAddress.slice(-4)}</span>
-        <span class="text-slate-500">|</span>
-        <span class="text-sky-400 font-bold">${parseFloat(ethers.formatEther(bal)).toFixed(2)} MON</span>
+        <span class="text-cyber-neon font-bold">${parseFloat(ethers.formatEther(bal)).toFixed(2)} MON</span>
       </div>`;
-    toast('Network terminal successfully authenticated.');
+    toast('Terminal authentication linked successfully.');
     loadAgents();
-  } catch(e) { toast('Terminal signature extraction failed.', true); }
+  } catch(e) { toast('Signature verification dropped.', true); }
 }
 
 async function loadAgents() {
-  const grid = document.getElementById('node-grid');
+  const grid = document.getElementById('event-grid');
   try {
     const src = contract || new ethers.Contract(CONTRACT, ABI, new ethers.JsonRpcProvider('https://testnet-rpc.monad.xyz/'));
     const count = await src.agentCount();
     document.getElementById('ribbon-count').textContent = count.toString();
     if (count === 0n) {
-      grid.innerHTML = `<div class="text-center py-16 text-slate-500 font-mono text-xs col-span-full border border-dashed border-cyber-border/50 rounded-xl bg-cyber-card/30">No active telemetry pipelines currently deployed on-chain.</div>`;
+      grid.innerHTML = `<div class="text-center py-16 text-slate-600 text-xs col-span-full border border-dashed border-cyber-border/60 rounded-lg bg-cyber-card/20 uppercase tracking-widest">No target network pipelines mapped to current blocks.</div>`;
       return;
     }
     let html = '';
@@ -245,68 +258,67 @@ async function loadAgents() {
       const a = await src.agents(i);
       const isOwner = userAddress && a.developer.toLowerCase() === userAddress.toLowerCase();
       html += `
-        <div class="bg-cyber-card border border-cyber-border/80 rounded-xl p-6 relative group transition-all duration-300 glow-hover">
-          <div class="flex justify-between items-center mb-4">
-            <span class="flex items-center gap-2 text-[10px] font-mono tracking-widest text-emerald-400 bg-emerald-400/5 px-2 py-0.5 border border-emerald-500/10 rounded">
-              <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_6px_#10b981]"></span>ONLINE
-            </span>
-            <span class="font-mono text-[10px] text-slate-600 uppercase">PIPE_ID_#${i}</span>
-          </div>
-          <h4 class="text-lg font-bold text-white mb-2 tracking-tight group-hover:text-sky-400 transition-colors">${String(a.name)}</h4>
-          <p class="text-xs text-slate-400 font-mono leading-relaxed h-12 overflow-hidden mb-6">${String(a.description)}</p>
-          
-          <div class="grid grid-cols-2 gap-2 border-t border-dashed border-cyber-border/60 pt-4 mb-5 font-mono text-[10px] text-slate-500">
-            <div>LATENCY: <span class="text-slate-300 font-semibold">0.18ms</span></div>
-            <div>BANDWIDTH: <span class="text-slate-300 font-semibold">10 Gbps</span></div>
-          </div>
-
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="block text-[9px] font-mono tracking-wider text-slate-600 uppercase">Bond Required</span>
-              <span class="text-base font-bold text-white tracking-tight">${ethers.formatEther(a.price)} <span class="text-[10px] text-sky-400 font-normal">MON</span></span>
+        <div class="bg-cyber-card border border-cyber-border rounded-lg p-6 flex flex-col justify-between transition-all duration-300 glow-border group relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-cyber-neon/5 to-transparent pointer-events-none"></div>
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-[9px] tracking-widest text-cyan-400 bg-cyan-400/5 border border-cyan-500/20 px-2 py-0.5 font-bold uppercase">VERIFIED SECURE LINK</span>
+              <span class="text-[9px] text-slate-600">TOKEN_#${i}</span>
             </div>
-            ${isOwner ? '<span class="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded">✓ Local Owner</span>' : `<button id="lease-${i}" onclick="leaseNode(${i},'${a.price}')" class="font-mono text-xs font-bold bg-sky-500 hover:bg-sky-400 text-cyber-black px-4 py-2 rounded transition-colors">Lease Pipe</button>`}
+            <h4 class="text-base font-bold text-white mb-2 font-display uppercase tracking-tight group-hover:text-cyber-neon transition-colors">${String(a.name)}</h4>
+            <p class="text-[11px] text-slate-400 leading-relaxed font-mono h-12 overflow-hidden mb-6">${String(a.description)}</p>
+          </div>
+          
+          <div class="border-t border-dashed border-cyber-border/80 pt-4 mt-2">
+            <div class="h-6 w-full barcode-line opacity-30 mb-4"></div>
+            <div class="flex items-center justify-between text-xs">
+              <div>
+                <span class="block text-[8px] uppercase tracking-widest text-slate-600 font-bold">Allocation Cost</span>
+                <span class="text-base font-bold text-white font-display">${ethers.formatEther(a.price)} <span class="text-xs text-cyber-neon font-normal font-mono">MON</span></span>
+              </div>
+              ${isOwner ? '<span class="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 border border-cyan-500/20 px-3 py-1">LOCAL OPERATOR</span>' : `<button id="claim-${i}" onclick="claimTicket(${i},'${a.price}')" class="text-xs font-bold bg-cyber-neon hover:bg-purple-600 hover:text-white text-black px-4 py-2 transition-all duration-150">LEASE SLOT</button>`}
+            </div>
           </div>
         </div>`;
     }
     grid.innerHTML = html;
-  } catch(e) { grid.innerHTML = `<div class="text-center py-12 text-red-400 font-mono text-xs col-span-full">Telemetry collection buffer initialization error.</div>`; }
+  } catch(e) { grid.innerHTML = `<div class="text-center py-12 text-red-400 text-xs col-span-full">Telemetry tracking acquisition block malfunction.</div>`; }
 }
 
-async function leaseNode(id, price) {
+async function claimTicket(id, price) {
   if (!contract) { toast('Authenticate crypto terminal parameters first.', true); return; }
-  const btn = document.getElementById(`lease-${id}`);
+  const btn = document.getElementById(`claim-${id}`);
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
   try {
-    toast('Awaiting manual terminal signature confirmation...');
+    toast('Extracting hardware key authentication signatures...');
     const tx = await contract.buyAgent(id, { value: price });
-    toast('Relay initialization broadcasted... processing.');
+    toast('Broadcasting lease mutation into asynchronous workers...');
     await tx.wait();
-    toast('Pipeline secure connection verified! Channel established.');
+    toast('Allocation confirmed! Digital entry passport verified.');
     loadAgents();
-  } catch(e) { toast('Lease validation protocol tracking aborted.', true); btn.disabled = false; btn.innerHTML = 'Lease Pipe'; }
+  } catch(e) { toast('Consensus pipeline allocation aborted.', true); btn.disabled = false; btn.innerHTML = 'LEASE SLOT'; }
 }
 
 async function listAgent() {
-  if (!contract) { toast('Authenticate terminal parameters first.', true); return; }
+  if (!contract) { toast('Authenticate crypto terminal parameters first.', true); return; }
   const name = document.getElementById('inp-name').value.trim();
   const desc = document.getElementById('inp-desc').value.trim();
   const price = document.getElementById('inp-price').value.trim();
-  if (!name || !desc || !price) { toast('Incomplete data stream buffers detected.', true); return; }
+  if (!name || !desc || !price) { toast('Data transaction buffering parameters empty.', true); return; }
   const btn = document.getElementById('list-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> PACKING STREAM BUFFER...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> SEQUENCING DATA FIELDS...';
   try {
     const tx = await contract.listAgent(name, desc, ethers.parseEther(price));
-    toast('Broadcasting sync metrics across parallel workers...');
+    toast('Injecting system allocation rules into blockchain validation layers...');
     await tx.wait();
-    toast('Distributed Uplink broadcast secure on-chain.');
+    toast('Allocation token system broadcasted securely.');
     document.getElementById('inp-name').value = '';
     document.getElementById('inp-desc').value = '';
     document.getElementById('inp-price').value = '';
     switchTab('browse', document.getElementById('tab-browse'));
     loadAgents();
-  } catch(e) { toast('Broadcast matrix parameter injection rejected.', true); }
-  finally { btn.disabled = false; btn.innerHTML = '⚡ Broadcast Uplink Lease'; }
+  } catch(e) { toast('Broadcast framework registration parameters rejected.', true); }
+  finally { btn.disabled = false; btn.innerHTML = '⚡ BROADCAST ACCESS SYSTEM TO CHAIN'; }
 }
 
 async function loadOwnedAgents() {
@@ -314,22 +326,20 @@ async function loadOwnedAgents() {
   if (!contract) return;
   try {
     const ids = await contract.getOwnedAgents(userAddress);
-    if (!ids.length) { grid.innerHTML = `<div class="text-center py-12 text-slate-500 font-mono text-xs col-span-full border border-dashed border-cyber-border/50 rounded-xl bg-cyber-card/30">No active telemetry pipelines mapped to current cryptographic profile.</div>`; return; }
+    if (!ids.length) { grid.innerHTML = `<div class="text-center py-12 text-slate-600 text-xs col-span-full border border-dashed border-cyber-border/60 rounded-lg bg-cyber-card/30 uppercase tracking-widest">No active allocation variables mapped to this profile signature.</div>`; return; }
     let html = '';
     for (const id of ids) {
       const a = await contract.agents(id);
       html += `
-        <div class="bg-cyber-card border border-cyber-border/80 rounded-xl p-6 relative">
+        <div class="bg-cyber-card border border-cyan-500/30 rounded-lg p-6 relative shadow-2xl">
           <div class="flex justify-between items-center mb-4">
-            <span class="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-sky-400 bg-sky-400/5 px-2 py-0.5 border border-sky-500/10 rounded">
-              📡 ACTIVE_UPLINK
-            </span>
-            <span class="font-mono text-[10px] text-slate-600">PIPE_#${id}</span>
+            <span class="text-[9px] tracking-widest text-cyber-neon bg-cyber-neon/5 border border-cyber-neon/20 px-2 py-0.5 font-bold uppercase">● SECURITY_GRANTED</span>
+            <span class="text-[9px] text-slate-600">SYS_ID_#${id}</span>
           </div>
-          <h4 class="text-lg font-bold text-white mb-2 tracking-tight">${String(a.name)}</h4>
-          <p class="text-xs text-slate-400 font-mono leading-relaxed h-12 overflow-hidden mb-4">${String(a.description)}</p>
-          <div class="text-[10px] font-mono text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 p-2 rounded">
-            > STREAM_STATUS: STABLE_SYNC_OK
+          <h4 class="text-base font-bold text-white mb-2 font-display uppercase tracking-tight">${String(a.name)}</h4>
+          <p class="text-[11px] text-slate-400 font-mono leading-relaxed h-12 overflow-hidden mb-4">${String(a.description)}</p>
+          <div class="text-[9px] font-mono text-cyan-400 bg-cyan-400/5 border border-cyan-500/10 p-2 text-center tracking-widest uppercase font-bold">
+            > VERIFICATION_HASH: SYNC_VALID
           </div>
         </div>`;
     }
